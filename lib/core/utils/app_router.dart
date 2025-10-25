@@ -9,7 +9,7 @@ import '../../features/authentication/presentation/pages/forgot_password_page.da
 import '../pages/home_page.dart';
 import '../../features/compte/presentation/pages/compte_page.dart';
 import '../../features/cotisations/presentation/pages/cotisations_page.dart';
-import '../../features/projets/presentation/pages/projets_page.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../widgets/main_layout.dart';
 
 class AppRouter {
@@ -77,14 +77,14 @@ class AppRouter {
               builder: (context, state) => const CotisationsPage(),
             ),
             GoRoute(
-              path: '/projets',
-              name: 'projets',
-              builder: (context, state) => const ProjetsPage(),
-            ),
-            GoRoute(
               path: '/compte',
               name: 'compte',
               builder: (context, state) => const ComptePage(),
+            ),
+            GoRoute(
+              path: '/admin-dashboard',
+              name: 'admin-dashboard',
+              builder: (context, state) => const AdminDashboardPage(),
             ),
           ],
         ),

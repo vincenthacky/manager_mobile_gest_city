@@ -61,6 +61,9 @@ dependencies:
   
   # Device info
   device_info_plus: ^10.1.0
+  
+  # QR Code scanner
+  mobile_scanner: ^5.0.1
 
 dev_dependencies:
   flutter_test:
