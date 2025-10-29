@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:manager_gest_city/features/cotisations/presentation/pages/try_scan.dart';
 import 'package:provider/provider.dart';
 import '../../features/authentication/controller/auth_controller.dart';
 import '../../features/authentication/presentation/pages/splash_page.dart';
@@ -19,8 +20,9 @@ class AppRouter {
       redirect: (context, state) {
         final authController = context.read<AuthController>();
         final isAuthenticated = authController.isAuthenticated;
-        final isLoading = authController.status == AuthStatus.initial || 
-                         authController.status == AuthStatus.loading;
+        final isLoading =
+            authController.status == AuthStatus.initial ||
+            authController.status == AuthStatus.loading;
 
         // Pendant le chargement, ne pas rediriger
         if (isLoading) {
@@ -29,15 +31,20 @@ class AppRouter {
 
         final isGoingToLogin = state.matchedLocation == '/login';
         final isGoingToRegister = state.matchedLocation == '/register';
-        final isGoingToForgotPassword = state.matchedLocation == '/forgot-password';
+        final isGoingToForgotPassword =
+            state.matchedLocation == '/forgot-password';
 
         // Si pas authentifié et pas sur login/register/forgot-password, rediriger vers login
-        if (!isAuthenticated && !isGoingToLogin && !isGoingToRegister && !isGoingToForgotPassword) {
+        if (!isAuthenticated &&
+            !isGoingToLogin &&
+            !isGoingToRegister &&
+            !isGoingToForgotPassword) {
           return '/login';
         }
 
         // Si authentifié et sur login/register/forgot-password, rediriger vers home
-        if (isAuthenticated && (isGoingToLogin || isGoingToRegister || isGoingToForgotPassword)) {
+        if (isAuthenticated &&
+            (isGoingToLogin || isGoingToRegister || isGoingToForgotPassword)) {
           return '/home';
         }
 
@@ -56,15 +63,18 @@ class AppRouter {
           builder: (context, state) => const RegisterPage(),
         ),
         GoRoute(
+          path: "/test-scan",
+          name: "test-scan",
+          builder: (context, state) => const QrScannerPage(),
+        ),
+        GoRoute(
           path: '/forgot-password',
           name: 'forgot-password',
           builder: (context, state) => const ForgotPasswordPage(),
         ),
         ShellRoute(
-          builder: (context, state, child) => MainLayout(
-            currentPath: state.matchedLocation,
-            child: child,
-          ),
+          builder: (context, state, child) =>
+              MainLayout(currentPath: state.matchedLocation, child: child),
           routes: [
             GoRoute(
               path: '/home',
@@ -99,11 +109,7 @@ class AppRouter {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 'Page non trouvée',

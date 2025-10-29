@@ -4,8 +4,11 @@
     <!-- Permissions pour l'appareil photo et la galerie -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- WRITE_EXTERNAL_STORAGE is deprecated on Android 10+; limit to maxSdkVersion 28 to avoid install-time issues -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <!-- For Android 13+ (API 33) granular media permissions -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     
     <!-- Feature pour l'appareil photo -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />

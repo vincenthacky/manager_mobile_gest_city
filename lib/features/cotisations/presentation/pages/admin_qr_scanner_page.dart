@@ -57,9 +57,55 @@ class _AdminQrScannerPageState extends State<AdminQrScannerPage> {
   }
 
   Future<void> _checkCameraPermission() async {
-    final status = await Permission.camera.request();
+    // Check current status first
+    final status = await Permission.camera.status;
+    if (status.isGranted) {
+      setState(() {
+        _hasPermission = true;
+      });
+      return;
+    }
+
+    // Request permission
+    final result = await Permission.camera.request();
+    if (result.isGranted) {
+      setState(() {
+        _hasPermission = true;
+      });
+      return;
+    }
+
+    // If permanently denied, show an explanatory dialog with a button to open app settings
+    if (result.isPermanentlyDenied) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Permission requise'),
+          content: const Text(
+            'La permission d\'accéder à la caméra a été refusée définitivement. Veuillez l\'autoriser dans les réglages de l\'app pour utiliser le scanner.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await openAppSettings();
+              },
+              child: const Text('Ouvrir les réglages'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Otherwise (denied but not permanently), keep hasPermission false so UI shows the prompt
     setState(() {
-      _hasPermission = status.isGranted;
+      _hasPermission = false;
     });
   }
 
@@ -76,22 +122,40 @@ class _AdminQrScannerPageState extends State<AdminQrScannerPage> {
                 onDetect: _onDetect,
               )
             else
-              const Center(
+              Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.camera_alt_outlined,
                       size: 64,
                       color: Colors.white,
                     ),
-                    SizedBox(height: 16),
-                    Text(
+                    const SizedBox(height: 16),
+                    const Text(
                       'Permission caméra requise',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _checkCameraPermission,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                      ),
+                      child: const Text('Demander la permission'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () async {
+                        await openAppSettings();
+                      },
+                      child: const Text(
+                        'Ouvrir les réglages',
+                        style: TextStyle(color: Colors.white70),
                       ),
                     ),
                   ],

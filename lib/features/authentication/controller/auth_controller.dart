@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../core/storage/secure_storage.dart';
@@ -8,7 +9,7 @@ enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
 class AuthController extends ChangeNotifier {
   final AuthDataSource _authDataSource = AuthDataSource();
-  
+
   AuthStatus _status = AuthStatus.initial;
   UserModel? _user;
   String? _errorMessage;
@@ -21,11 +22,11 @@ class AuthController extends ChangeNotifier {
 
   Future<void> checkAuthStatus() async {
     _setStatus(AuthStatus.loading);
-    
+
     try {
       final token = await SecureStorage.getToken();
       final userData = await SecureStorage.getUserData();
-      
+
       if (token != null && userData != null) {
         try {
           // Récupérer les données utilisateur depuis le stockage
@@ -53,10 +54,13 @@ class AuthController extends ChangeNotifier {
 
     try {
       final response = await _authDataSource.login(identifiant, motDePasse);
-      
+
       if (response.success) {
-        await SecureStorage.saveToken(response.data.token);
-        await SecureStorage.saveUserData(jsonEncode(response.data.user.toJson()));
+        await SecureStorage.saveToken(response.data.tokens.accessToken);
+        await SecureStorage.saveRefreshToken(response.data.tokens.refreshToken);
+        await SecureStorage.saveUserData(
+          jsonEncode(response.data.user.toJson()),
+        );
         _user = response.data.user;
         _setStatus(AuthStatus.authenticated);
         return true;
@@ -74,7 +78,7 @@ class AuthController extends ChangeNotifier {
 
   Future<void> logout() async {
     _setStatus(AuthStatus.loading);
-    
+
     try {
       await _authDataSource.logout();
     } catch (e) {
@@ -88,19 +92,52 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<bool> refreshToken() async {
+    final refresh = await SecureStorage.getRefreshToken();
+    if (refresh == null) return false;
+
+    _setStatus(AuthStatus.loading);
+    try {
+      // Assurez-vous que AuthDataSource a une méthode refreshToken(refresh)
+      final response = await _authDataSource.refreshToken(refresh);
+
+      if (response.success) {
+        await SecureStorage.saveToken(response.data!.tokens.accessToken);
+        await SecureStorage.saveRefreshToken(
+          response.data!.tokens.refreshToken,
+        );
+        // // Optionnel : mettre à jour user si la réponse contient user
+        // if (response.data.user != null) {
+        //   _user = response.data.user;
+        // }
+        _setStatus(AuthStatus.authenticated);
+        return true;
+      } else {
+        await logout(); // token invalide => logout
+        return false;
+      }
+    } catch (e) {
+      _setStatus(AuthStatus.unauthenticated);
+      return false;
+    }
+  }
+
   void _setStatus(AuthStatus status) {
     _status = status;
-    notifyListeners();
+    // Defer notifying listeners to avoid calling notifyListeners
+    // during the widget build phase which can trigger
+    // setState()/markNeedsBuild() called during build exceptions.
+    Future.microtask(() => notifyListeners());
   }
 
   void _setError(String error) {
     _errorMessage = error;
-    notifyListeners();
+    Future.microtask(() => notifyListeners());
   }
 
   void _clearError() {
     _errorMessage = null;
-    notifyListeners();
+    Future.microtask(() => notifyListeners());
   }
 
   void clearError() {
